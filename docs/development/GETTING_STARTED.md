@@ -18,7 +18,7 @@ you set up your development environment and make your first contribution.
 
 # Clone the repository
 
-git clone <repository-url>
+git clone https://github.com/techishthoughts-org/spring-web-flux-with-apache-pekko.git
 cd stocks-demo
 
 # Verify Java version

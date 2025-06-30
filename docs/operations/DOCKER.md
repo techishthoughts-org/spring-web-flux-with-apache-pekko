@@ -28,7 +28,7 @@ Stock Service using Docker.
 
 # Clone the repository
 
-git clone <repository-url>
+git clone https://github.com/techishthoughts-org/spring-web-flux-with-apache-pekko.git
 cd stocks-demo
 
 # Copy environment template
