@@ -47,8 +47,7 @@ make stack-observability
 curl <http://localhost:8080/stocks/AAPL>    # Single stock via actor
 curl <http://localhost:8080/stocks>         # Multiple stocks concurrently
 curl <http://localhost:8081/actuator/health> # Health check (management port)
-
-```text
+```
 
 ### 🔍 **Access the Observability Stack**
 
@@ -77,8 +76,7 @@ make urls
 
 
 # Loki:            <http://localhost:3100>
-
-```text
+```
 
 ### 🧪 **See the Actor Model in Action**
 
@@ -103,8 +101,7 @@ open <http://localhost:9090>
 # View logs in Grafana/Loki
 
 open <http://localhost:3000>
-
-```text
+```
 
 ## 🏗️ Architecture Highlights
 
@@ -196,8 +193,8 @@ command.replyTo().tell(new StockError(throwable.getMessage()));
         return this;
     }
 }
+```
 
-```text
 **🔥 Actor Model Benefits Demonstrated:**
 
 - **Concurrency**: Handle multiple stock requests simultaneously
@@ -218,8 +215,7 @@ LoggingContext.addRouteStep(httpStep);
 
 // Complete request with full trace
 LoggingContext.complete(200, responseBody);
-
-```text
+```
 
 ### 🏗️ Hexagonal Architecture
 
@@ -237,8 +233,7 @@ LoggingContext.complete(200, responseBody);
 │          Infrastructure Layer           │
 │  (Actors, External APIs, Persistence)   │
 └─────────────────────────────────────────┘
-
-```text
+```
 
 ## 🧪 Testing
 
@@ -264,8 +259,7 @@ Multi-level testing strategy with comprehensive coverage:
 ./scripts/act-helper.sh integration    # Test integration workflow
 ./scripts/act-helper.sh pr             # Test PR validation
 npm run act:list                       # List all available workflows
-
-```text
+```
 
 ## 🚀 Deployment
 
@@ -292,8 +286,7 @@ make env-check                         # Check prerequisites
 make urls                             # Show all service URLs
 make docker-logs                      # View application logs
 make docker-stop                      # Stop all services
-
-```text
+```
 
 ## 🔍 Observability & Monitoring
 
@@ -321,8 +314,8 @@ OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
 OTEL_SERVICE_NAME: stocks-service
 OTEL_RESOURCE_ATTRIBUTES:
 service.name=stocks-service,service.version=1.0.0,deployment.environment=docker
+```
 
-```text
 **🎯 Tracing Features:**
 
 - **Service Name**: `stocks-service` (properly configured)
@@ -369,8 +362,7 @@ public class StockService {
         });
     }
 }
-
-```text
+```
 
 ### ⚡ **Fault Tolerance Features**
 
@@ -470,8 +462,7 @@ make stack-observability         # Works with Docker or Podman
 
 CONTAINER_RUNTIME=podman make stack-observability
 COMPOSE_CMD=podman-compose make stack-observability
-
-```text
+```
 
 ### **Performance Optimizations**
 
@@ -493,12 +484,9 @@ COMPOSE_CMD=podman-compose make stack-observability
 
 ## 🤝 Contributing
 
-1. **Read the docs**: Start with [Getting
-Started](./docs/development/GETTING_STARTED.md)
-1. **Follow patterns**: Use the [7-step Actor Flow
-Guide](./docs/development/GETTING_STARTED.md#adding-new-actor-flows)
-1. **Test thoroughly**: Follow the [Testing
-Strategy](./docs/development/TESTING.md)
+1. **Read the docs**: Start with [Getting Started](./docs/development/GETTING_STARTED.md)
+1. **Follow patterns**: Use the [7-step Actor Flow Guide](./docs/development/GETTING_STARTED.md#adding-new-actor-flows)
+1. **Test thoroughly**: Follow the [Testing Strategy](./docs/development/TESTING.md)
 1. **Document changes**: Update relevant documentation
 
 ## 📄 License
