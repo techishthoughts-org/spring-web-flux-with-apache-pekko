@@ -31,7 +31,7 @@ showcasing clean separation between business logic and external integrations.
 
 # Clone and run
 
-git clone <repository-url>
+git clone https://github.com/techishthoughts-org/spring-web-flux-with-apache-pekko.git
 cd stocks-demo
 
 # Start the complete observability stack (recommended)
