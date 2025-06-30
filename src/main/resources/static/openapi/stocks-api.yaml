@@ -1,0 +1,147 @@
+openapi: 3.0.3
+info:
+  title: Stocks Demo API
+  description: API for retrieving stock information using Spring Boot, Pekko, and Reactor
+  version: 1.0.0
+  contact:
+    name: TechishThoughts
+    url: https://github.com/techishthoughts/spring-pekko-stocks
+    email: info@techishthoughts.com
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+servers:
+  - url: /
+    description: Default Server URL
+tags:
+  - name: stocks
+    description: Stock information operations
+paths:
+  /api/stocks:
+    get:
+      tags:
+        - stocks
+      summary: Get all stocks
+      description: Retrieves information for all available stocks
+      operationId: getAllStocks
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Stock'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/stocks/{symbol}:
+    get:
+      tags:
+        - stocks
+      summary: Get stock by symbol
+      description: Retrieves information for a specific stock by its symbol
+      operationId: getStockBySymbol
+      parameters:
+        - name: symbol
+          in: path
+          description: Stock symbol (e.g., AAPL, MSFT)
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stock'
+        '404':
+          description: Stock not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    Stock:
+      type: object
+      properties:
+        symbol:
+          type: string
+          example: AAPL
+        name:
+          type: string
+          example: Apple Inc.
+        exchange:
+          type: string
+          example: NASDAQ
+        assetType:
+          type: string
+          example: Stock
+        ipoDate:
+          type: string
+          format: date
+          example: 1980-12-12
+        delistingDate:
+          type: string
+          format: date
+          nullable: true
+          example: null
+        status:
+          type: string
+          example: Active
+        indicators:
+          type: object
+          additionalProperties:
+            type: object
+          example:
+            price: 150.00
+            open: 149.00
+            high: 151.00
+            low: 148.00
+            volume: 1000000
+        lastUpdated:
+          type: string
+          format: date-time
+          example: 2023-06-01T12:00:00Z
+      required:
+        - symbol
+        - indicators
+        - lastUpdated
+    Error:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: 2023-06-01T12:00:00Z
+        status:
+          type: integer
+          format: int32
+          example: 404
+        error:
+          type: string
+          example: Not Found
+        message:
+          type: string
+          example: Stock with symbol INVALID not found
+        path:
+          type: string
+          example: /api/stocks/INVALID
+      required:
+        - timestamp
+        - status
+        - error
+        - message
+        - path

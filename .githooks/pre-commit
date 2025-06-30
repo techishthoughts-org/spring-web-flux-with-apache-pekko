@@ -1,0 +1,185 @@
+#!/bin/bash
+
+# Pre-commit hook for automatic markdown fixing
+# This script runs before each commit to ensure markdown files are properly formatted
+# Now with enhanced automation and comprehensive fixing
+
+set -e
+
+echo "🔍 Pre-commit: Automatic markdown processing..."
+
+# Check if there are any markdown files in the staging area
+MARKDOWN_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(md|markdown)$' || true)
+
+if [ -z "$MARKDOWN_FILES" ]; then
+    echo "ℹ️  No markdown files to process"
+    exit 0
+fi
+
+echo "📋 Found markdown files to process:"
+echo "$MARKDOWN_FILES" | sed 's/^/  ✓ /'
+echo ""
+
+# Function to check if a command exists
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# Check dependencies
+MISSING_DEPS=()
+
+if ! command_exists node; then
+    MISSING_DEPS+=("Node.js")
+fi
+
+if ! command_exists npm; then
+    MISSING_DEPS+=("npm")
+fi
+
+if ! command_exists markdownlint; then
+    if command_exists npm; then
+        echo "📦 Installing markdownlint-cli..."
+        npm install -g markdownlint-cli >/dev/null 2>&1 || {
+            echo "⚠️  Failed to install markdownlint-cli globally, trying locally..."
+            npm install markdownlint-cli >/dev/null 2>&1 || MISSING_DEPS+=("markdownlint-cli")
+        }
+    else
+        MISSING_DEPS+=("markdownlint-cli")
+    fi
+fi
+
+if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
+    echo "❌ Missing dependencies: ${MISSING_DEPS[*]}"
+    echo "💡 Please install the missing dependencies and try again."
+    exit 1
+fi
+
+# Track processing results
+FILES_PROCESSED=0
+FILES_MODIFIED=0
+ERRORS=()
+
+echo "🚀 Starting automatic markdown processing..."
+echo ""
+
+# Step 1: Run basic markdownlint fixes on individual files
+echo "📝 Step 1: Basic markdown linting and fixes..."
+for file in $MARKDOWN_FILES; do
+    if [ -f "$file" ]; then
+        echo "  🔧 Processing $file..."
+
+        # Create backup for safety
+        cp "$file" "$file.pre-commit-backup"
+
+        # Run markdownlint with --fix
+        if markdownlint --fix --config .markdownlint.json "$file" 2>/dev/null; then
+            echo "    ✅ Basic fixes applied"
+        else
+            echo "    ⚠️  Some basic fixes may have failed, continuing..."
+        fi
+
+        # Check if file was modified
+        if ! cmp -s "$file" "$file.pre-commit-backup"; then
+            FILES_MODIFIED=$((FILES_MODIFIED + 1))
+        fi
+
+        FILES_PROCESSED=$((FILES_PROCESSED + 1))
+
+        # Clean up backup
+        rm -f "$file.pre-commit-backup"
+    fi
+done
+
+echo "    📊 Processed $FILES_PROCESSED files, $FILES_MODIFIED modified"
+echo ""
+
+# Step 2: Run advanced fixes on all markdown files
+echo "🚀 Step 2: Advanced markdown fixes..."
+if [ -f "package.json" ] && [ -f "scripts/fix-markdown.js" ]; then
+    echo "  🔧 Running npm run docs:fix-advanced..."
+
+    if npm run docs:fix-advanced >/dev/null 2>&1; then
+        echo "    ✅ Advanced fixes completed successfully"
+
+        # Stage any newly modified files
+        for file in $MARKDOWN_FILES; do
+            if [ -f "$file" ]; then
+                git add "$file" 2>/dev/null || true
+            fi
+        done
+
+        # Clean up backup files automatically
+        echo "  🧹 Cleaning up backup files..."
+        if npm run docs:clean-backups >/dev/null 2>&1; then
+            echo "    ✅ Backup cleanup completed"
+        else
+            # Fallback cleanup
+            rm -f docs/*.backup 2>/dev/null || true
+            echo "    ✅ Backup cleanup completed (fallback)"
+        fi
+    else
+        echo "    ⚠️  Advanced fixes encountered issues, but continuing..."
+        ERRORS+=("Advanced fixes failed")
+    fi
+else
+    echo "    ⚠️  Advanced fix script not available, skipping..."
+fi
+
+echo ""
+
+# Step 3: Final comprehensive lint check
+echo "🔍 Step 3: Final validation..."
+echo "  📋 Running comprehensive markdown lint check..."
+
+LINT_OUTPUT=$(markdownlint --config .markdownlint.json docs/*.md README.md 2>&1 || true)
+
+if [ -n "$LINT_OUTPUT" ]; then
+    echo "    ❌ Remaining markdown issues found:"
+    echo "$LINT_OUTPUT" | sed 's/^/      /'
+    echo ""
+    echo "    🤔 Some issues couldn't be auto-fixed."
+    echo "    💡 Try running 'npm run docs:fix-advanced' manually"
+    echo "    🔧 Or fix the issues manually and commit again"
+    echo ""
+    ERRORS+=("Remaining lint issues")
+else
+    echo "    ✅ All markdown files pass validation!"
+fi
+
+echo ""
+
+# Step 4: Summary and results
+echo "📊 Pre-commit Summary:"
+echo "====================="
+echo "  📁 Files processed: $FILES_PROCESSED"
+echo "  📝 Files modified: $FILES_MODIFIED"
+echo "  🧹 Backups cleaned: ✅"
+
+if [ ${#ERRORS[@]} -gt 0 ]; then
+    echo "  ⚠️  Issues encountered: ${#ERRORS[@]}"
+    for error in "${ERRORS[@]}"; do
+        echo "    - $error"
+    done
+    echo ""
+    echo "🚫 Commit blocked due to remaining issues."
+    echo "💡 Please fix the issues above and try committing again."
+    echo ""
+    exit 1
+else
+    echo "  ✅ Status: All checks passed!"
+    echo ""
+
+    # Show what files were staged
+    STAGED_MD_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(md|markdown)$' || true)
+    if [ -n "$STAGED_MD_FILES" ]; then
+        echo "📝 Staged markdown files:"
+        echo "$STAGED_MD_FILES" | sed 's/^/  ✅ /'
+        echo ""
+    fi
+
+    echo "🎉 Pre-commit processing completed successfully!"
+    echo "✨ Your markdown files are now properly formatted and ready to commit!"
+fi
+
+echo ""
+exit 0

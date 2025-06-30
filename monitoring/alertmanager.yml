@@ -1,0 +1,88 @@
+global:
+  # SMTP Configuration (optional, configure based on your email provider)
+  smtp_smarthost: 'localhost:587'
+  smtp_from: 'alerts@stocks-app.com'
+  smtp_auth_username: 'your-email@gmail.com'
+  smtp_auth_password: 'your-app-password'
+
+# Route configuration
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 1h
+  receiver: 'default'
+  routes:
+    - match:
+        severity: critical
+      receiver: 'critical-alerts'
+      group_wait: 5s
+      repeat_interval: 30m
+    - match:
+        severity: warning
+      receiver: 'warning-alerts'
+      group_wait: 30s
+      repeat_interval: 2h
+
+# Receivers configuration
+receivers:
+  - name: 'default'
+    webhook_configs:
+      - url: 'http://localhost:3000/api/alertmanager/webhook'
+        send_resolved: true
+
+  - name: 'critical-alerts'
+    webhook_configs:
+      - url: 'http://localhost:3000/api/alertmanager/webhook'
+        send_resolved: true
+        title: 'CRITICAL: {{ .GroupLabels.alertname }}'
+        text: |
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Labels: {{ .Labels }}
+          {{ end }}
+    # Uncomment below to enable email notifications
+    # email_configs:
+    #   - to: 'critical-alerts@stocks-app.com'
+    #     subject: 'CRITICAL: {{ .GroupLabels.alertname }}'
+    #     body: |
+    #       {{ range .Alerts }}
+    #       Alert: {{ .Annotations.summary }}
+    #       Description: {{ .Annotations.description }}
+    #       Labels: {{ .Labels }}
+    #       {{ end }}
+
+  - name: 'warning-alerts'
+    webhook_configs:
+      - url: 'http://localhost:3000/api/alertmanager/webhook'
+        send_resolved: true
+        title: 'WARNING: {{ .GroupLabels.alertname }}'
+        text: |
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Labels: {{ .Labels }}
+          {{ end }}
+    # Uncomment below to enable email notifications
+    # email_configs:
+    #   - to: 'warning-alerts@stocks-app.com'
+    #     subject: 'WARNING: {{ .GroupLabels.alertname }}'
+    #     body: |
+    #       {{ range .Alerts }}
+    #       Alert: {{ .Annotations.summary }}
+    #       Description: {{ .Annotations.description }}
+    #       Labels: {{ .Labels }}
+    #       {{ end }}
+
+# Inhibit rules
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'cluster', 'service']
+
+# Silence configuration
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'

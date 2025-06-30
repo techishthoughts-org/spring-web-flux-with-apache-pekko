@@ -1,0 +1,27 @@
+# Act Configuration for Spring Boot + Pekko Stocks Service
+# This file configures Act to run GitHub Actions locally
+
+# Use GitHub's official runner images for better compatibility
+-P ubuntu-latest=catthehacker/ubuntu:act-latest
+-P ubuntu-22.04=catthehacker/ubuntu:act-22.04
+-P ubuntu-20.04=catthehacker/ubuntu:act-20.04
+
+# Environment variables for local testing
+--env JAVA_VERSION=21
+--env MAVEN_OPTS=-Xmx2g -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+--env FINNHUB_API_KEY=test-key-for-local-testing
+--env WIREMOCK_URL=http://localhost:8089
+
+# Skip certain steps that require secrets or external services
+--env SKIP_SONAR=true
+--env SKIP_CODECOV=true
+
+# Increase verbosity for debugging
+--verbose
+
+# Use host networking for service communication
+--use-gitignore=false
+
+# Container settings
+--container-daemon-socket /var/run/docker.sock
+--container-architecture linux/amd64

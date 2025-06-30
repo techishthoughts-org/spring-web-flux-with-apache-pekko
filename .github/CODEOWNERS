@@ -1,0 +1,48 @@
+# Global owners
+* @tech-lead @senior-developer
+
+# Domain layer
+src/main/java/**/domain/ @domain-expert @business-analyst
+
+# Application layer
+src/main/java/**/application/ @application-architect @senior-developer
+
+# Infrastructure layer
+src/main/java/**/infrastructure/ @infrastructure-team @devops-team
+
+# Adapter layer (hexagonal architecture)
+src/main/java/**/adapter/ @adapter-specialist @integration-expert
+
+# Configuration
+src/main/resources/ @configuration-manager @devops-team
+
+# Tests
+src/test/ @qa-team @test-engineer
+
+# Documentation
+docs/ @tech-writers @documentation-team
+README.md @tech-writers @tech-lead
+*.md @tech-writers
+
+# CI/CD
+.github/ @devops-team @ci-cd-specialist
+.github/workflows/ @devops-team @github-actions-expert
+
+# Docker & Kubernetes
+Dockerfile @devops-team @container-specialist
+docker-compose.yml @devops-team @container-specialist
+k8s/ @kubernetes-team @devops-team
+
+# Maven configuration
+pom.xml @build-engineer @dependency-manager
+.mvn/ @build-engineer
+
+# Security
+.github/workflows/security.yml @security-team @devops-team
+
+# Performance & Monitoring
+src/main/java/**/monitoring/ @observability-team @performance-engineer
+src/main/java/**/metrics/ @observability-team
+
+# Actor System (Pekko)
+src/main/java/**/actor/ @actor-system-expert @pekko-specialist

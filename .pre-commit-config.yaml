@@ -1,0 +1,60 @@
+repos:
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.37.0
+    hooks:
+      - id: markdownlint
+        name: markdownlint
+        description: "Checks the style of Markdown files"
+        entry: markdownlint
+        language: node
+        files: \.(md|mdown|markdown)$
+        args: ['--fix', '--config', '.markdownlint.json']
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+        name: Trim Trailing Whitespace
+        description: This hook trims trailing whitespace
+        entry: trailing-whitespace-fixer
+        language: system
+        files: \.(md|yml|yaml|json|js|ts|java|xml|properties)$
+
+      - id: end-of-file-fixer
+        name: Fix End of Files
+        description: Ensures that a file is either empty or ends with one newline
+        entry: end-of-file-fixer
+        language: system
+        files: \.(md|yml|yaml|json|js|ts|java|xml|properties)$
+
+      - id: check-yaml
+        name: Check Yaml
+        description: This hook checks yaml files for parseable syntax
+        entry: check-yaml
+        language: system
+        files: \.(yml|yaml)$
+
+      - id: check-json
+        name: Check JSON
+        description: This hook checks json files for parseable syntax
+        entry: check-json
+        language: system
+        files: \.json$
+
+  - repo: local
+    hooks:
+      - id: markdown-advanced-fix
+        name: Advanced Markdown Fix & Cleanup
+        description: "Comprehensive markdown fixing with automatic cleanup"
+        entry: bash -c 'npm run docs:fix-advanced && npm run docs:clean-backups'
+        language: system
+        files: \.(md|mdown|markdown)$
+        pass_filenames: false
+
+      - id: markdown-final-check
+        name: Final Markdown Validation
+        description: "Final comprehensive markdown validation"
+        entry: bash -c 'markdownlint --config .markdownlint.json docs/*.md README.md'
+        language: system
+        files: \.(md|mdown|markdown)$
+        pass_filenames: false

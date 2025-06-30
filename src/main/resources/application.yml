@@ -1,0 +1,113 @@
+finnhub:
+  api-key: ${FINNHUB_KEY:defaultApiKey}
+
+spring:
+  codec:
+    max-in-memory-size: 10MB
+  application:
+    name: stocks
+  sleuth:
+    enabled: false  # Disable Sleuth in favor of Micrometer Tracing
+
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
+    metrics:
+      enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+# OpenTelemetry Configuration
+otel:
+  traces:
+    exporter: otlp
+  metrics:
+    exporter: none
+  logs:
+    exporter: none
+  exporter:
+    otlp:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318}
+      protocol: http/protobuf
+      headers: ${OTEL_EXPORTER_OTLP_HEADERS:}
+  resource:
+    attributes:
+      service.name: ${spring.application.name}
+      service.version: ${project.version:1.0.0}
+      deployment.environment: ${DEPLOYMENT_ENVIRONMENT:local}
+
+# Grafana Pyroscope Continuous Profiling Configuration
+pyroscope:
+  enabled: ${PYROSCOPE_ENABLED:true}
+  application-name: ${PYROSCOPE_APPLICATION_NAME:${spring.application.name}}
+  server-address: ${PYROSCOPE_SERVER_ADDRESS:http://localhost:4040}
+  basic-auth-user: ${PYROSCOPE_BASIC_AUTH_USER:}
+  basic-auth-password: ${PYROSCOPE_BASIC_AUTH_PASSWORD:}
+  tenant-id: ${PYROSCOPE_TENANT_ID:}
+
+logging:
+  level:
+    com.techishthoughts.stocks: INFO
+    org.apache.pekko: INFO
+    org.springframework.web.reactive.function.client: DEBUG
+    net.logstash.logback: WARN
+    io.micrometer.tracing: DEBUG
+    io.opentelemetry: DEBUG
+    io.pyroscope: INFO
+  file:
+    path: ${LOG_PATH:logs}
+  pattern:
+    # Console pattern with colors, context, and OpenTelemetry tracing
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5level) [%thread] [%X{traceId:-},%X{spanId:-}] %cyan(%logger{36}) %X{requestId:-} - %msg%n"
+    # File pattern with full context and OpenTelemetry tracing
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [%X{traceId:-},%X{spanId:-}] %logger{50} %X{requestId:-} %X{method:-} %X{uri:-} %X{statusCode:-} - %msg%n"
+
+# Profile-specific logging configurations
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+logging:
+  level:
+    com.techishthoughts.stocks: DEBUG
+    org.springframework.web.reactive.function.client: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+logging:
+  level:
+    com.techishthoughts.stocks: WARN
+    org.apache.pekko: WARN
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+logging:
+  level:
+    com.techishthoughts.stocks: INFO
+    org.apache.pekko: WARN
+    org.springframework.web.reactive.function.client: WARN
+  file:
+    path: /app/logs

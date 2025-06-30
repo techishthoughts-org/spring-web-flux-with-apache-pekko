@@ -1,0 +1,36 @@
+{
+  "name": "stocks-demo",
+  "version": "1.0.0",
+  "description": "Spring Boot Stocks Demo with Pekko Actors",
+  "scripts": {
+    "docs:lint": "markdownlint docs/**/*.md README.md",
+    "docs:fix": "markdownlint --fix docs/**/*.md README.md",
+    "docs:fix-advanced": "node scripts/fix-markdown.js",
+    "docs:fix-bash": "./scripts/fix-markdown.sh",
+    "docs:check": "markdownlint docs/**/*.md README.md --config .markdownlint.json",
+    "docs:clean-backups": "rm -f docs/*.backup",
+    "setup:hooks": "./scripts/setup-git-hooks.sh",
+    "test:pre-commit": "git add . && git commit --dry-run",
+    "act:list": "act --list",
+    "act:ci": "act --job unit-tests",
+    "act:pr": "act pull_request --job fast-validation",
+    "act:build": "act --job build",
+    "act:security": "act --job code-quality",
+    "act:integration": "act --job integration-tests",
+    "act:component": "act --job component-tests",
+    "act:all": "act --workflows .github/workflows/ci.yml",
+    "act:dry-run": "act --dry-run"
+  },
+  "devDependencies": {
+    "markdownlint-cli": "^0.37.0"
+  },
+  "keywords": [
+    "spring-boot",
+    "pekko",
+    "actors",
+    "stocks",
+    "reactive"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}

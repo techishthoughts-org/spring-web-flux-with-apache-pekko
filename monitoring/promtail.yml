@@ -1,0 +1,120 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # Application logs
+  - job_name: stocks-app-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: stocks-app
+          service: stocks-service
+          __path__: /app/logs/*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            timestamp: timestamp
+            level: level
+            message: message
+            logger: logger
+            thread: thread
+            traceId: tracing.traceId
+            spanId: tracing.spanId
+            parentId: tracing.parentId
+            correlationId: tracing.correlationId
+            requestId: request.id
+            method: request.method
+            uri: request.uri
+            statusCode: request.statusCode
+      - timestamp:
+          source: timestamp
+          format: RFC3339
+      - labels:
+          level:
+          logger:
+          traceId:
+          spanId:
+          parentId:
+          correlationId:
+          requestId:
+          method:
+          uri:
+          statusCode:
+
+  # Application JSON logs
+  - job_name: stocks-app-json-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: stocks-app-json
+          service: stocks-service
+          format: json
+          __path__: /app/logs/*.json
+    pipeline_stages:
+      - json:
+          expressions:
+            timestamp: timestamp
+            level: level
+            message: message
+            logger: logger
+            thread: thread
+            tracing: tracing
+            request: request
+            application: application
+      - timestamp:
+          source: timestamp
+          format: RFC3339
+      - labels:
+          level:
+          logger:
+          service: application.name
+          environment: application.environment
+
+  # System logs
+  - job_name: system-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: system
+          __path__: /var/log/messages
+    pipeline_stages:
+      - regex:
+          expression: '^(?P<timestamp>\S+ \S+ \S+) (?P<hostname>\S+) (?P<service>\S+): (?P<message>.*)$'
+      - timestamp:
+          source: timestamp
+          format: 'Jan 2 15:04:05'
+      - labels:
+          hostname:
+          service:
+
+  # Docker logs (if available)
+  - job_name: docker-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: docker
+          __path__: /var/log/docker.log
+    pipeline_stages:
+      - json:
+          expressions:
+            timestamp: time
+            level: level
+            message: msg
+            container: attrs.name
+      - timestamp:
+          source: timestamp
+          format: RFC3339
+      - labels:
+          level:
+          container:
