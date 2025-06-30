@@ -47,7 +47,7 @@
         <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
         <maven-failsafe-plugin.version>3.5.3</maven-failsafe-plugin.version>
         <jmh-maven-plugin.version>0.2.2</jmh-maven-plugin.version>
-        <rewrite-maven-plugin.version>6.11.0</rewrite-maven-plugin.version>
+        <rewrite-maven-plugin.version>6.12.0</rewrite-maven-plugin.version>
 
         <!-- Test Configuration -->
         <skipTests>false</skipTests>
