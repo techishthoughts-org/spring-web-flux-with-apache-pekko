@@ -64,6 +64,12 @@ WORKDIR /app
 RUN mkdir -p /app/logs /app/tmp \
     && chown -R appuser:appgroup /app
 
+# Download OpenTelemetry Java Agent only
+USER root
+RUN curl -L -o /app/opentelemetry-javaagent.jar \
+    "https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v1.17.0/opentelemetry-javaagent.jar" && \
+    chown appuser:appgroup /app/opentelemetry-javaagent.jar
+
 # Copy application layers from builder stage (optimized for Docker layer caching)
 COPY --from=builder --chown=appuser:appgroup /build/extracted/dependencies/ ./
 COPY --from=builder --chown=appuser:appgroup /build/extracted/spring-boot-loader/ ./

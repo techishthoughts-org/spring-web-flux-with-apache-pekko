@@ -1,13 +1,7 @@
 package com.techishthoughts.stocks.adapter.out.finnhub;
 
-import com.techishthoughts.stocks.adapter.out.finnhub.dto.CompanyProfile;
-import com.techishthoughts.stocks.adapter.out.finnhub.dto.StockDetails;
-import com.techishthoughts.stocks.adapter.out.finnhub.dto.StockSymbols;
-import com.techishthoughts.stocks.adapter.out.mapper.FinnhubMapper;
-import com.techishthoughts.stocks.application.port.out.StockMarketClient;
-import com.techishthoughts.stocks.infrastructure.logging.LoggingContext;
-import com.techishthoughts.stocks.infrastructure.logging.RouteStep;
 import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,6 +10,14 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import com.techishthoughts.stocks.adapter.out.finnhub.dto.CompanyProfile;
+import com.techishthoughts.stocks.adapter.out.finnhub.dto.StockDetails;
+import com.techishthoughts.stocks.adapter.out.finnhub.dto.StockSymbols;
+import com.techishthoughts.stocks.application.port.out.StockMarketClient;
+import com.techishthoughts.stocks.infrastructure.logging.LoggingContext;
+import com.techishthoughts.stocks.infrastructure.logging.RouteStep;
+
 import reactor.core.publisher.Mono;
 
 /**
@@ -45,15 +47,12 @@ public class FinnhubClient implements StockMarketClient {
 
     private final WebClient webClient;
     private final String apiKey;
-    private final FinnhubMapper finnhubMapper;
 
     public FinnhubClient(
             WebClient.Builder builder,
-            @Value("${finnhub.api-key}") String apiKey,
-            FinnhubMapper finnhubMapper) {
+            @Value("${finnhub.api-key}") String apiKey) {
         this.webClient = builder.baseUrl(FINNHUB_BASE_URL).build();
         this.apiKey = apiKey;
-        this.finnhubMapper = finnhubMapper;
     }
 
     @Override
@@ -134,7 +133,30 @@ public class FinnhubClient implements StockMarketClient {
 
     @Override
     public StockDetails getStockDetails(StockSymbols symbol, CompanyProfile profile) {
-        return finnhubMapper.toStockDetails(symbol, profile);
+        if (symbol == null && profile == null) {
+            return null;
+        }
+
+        String symbolValue = symbol != null ? symbol.symbol() : null;
+        String assetType = symbol != null ? symbol.type() : null;
+        String name = profile != null ? profile.name() : null;
+        String exchange = profile != null ? profile.exchange() : null;
+        String ipoDate = profile != null ? profile.ipo() : null;
+        String country = profile != null ? profile.country() : null;
+        String currency = profile != null ? profile.currency() : null;
+        String ipo = profile != null ? profile.ipo() : null;
+        Double marketCapitalization = profile != null ? profile.marketCapitalization() : null;
+        String phone = profile != null ? profile.phone() : null;
+        Double shareOutstanding = profile != null ? profile.shareOutstanding() : null;
+        String ticker = profile != null ? profile.ticker() : null;
+        String weburl = profile != null ? profile.weburl() : null;
+        String logo = profile != null ? profile.logo() : null;
+        String finnhubIndustry = profile != null ? profile.finnhubIndustry() : null;
+
+        return new StockDetails(
+                symbolValue, name, exchange, assetType, ipoDate, country, currency, ipo,
+                marketCapitalization, phone, shareOutstanding, ticker, weburl, logo, finnhubIndustry
+        );
     }
 
     /**

@@ -6,10 +6,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-import com.techishthoughts.stocks.adapter.out.finnhub.FinnhubClient;
-import com.techishthoughts.stocks.adapter.out.finnhub.dto.StockSymbols;
-import com.techishthoughts.stocks.adapter.out.mapper.FinnhubMapper;
 import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,6 +15,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import com.techishthoughts.stocks.adapter.out.finnhub.FinnhubClient;
+import com.techishthoughts.stocks.adapter.out.finnhub.dto.StockSymbols;
+
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -41,9 +43,6 @@ class FinnhubClientTest {
     @Mock
     private WebClient.ResponseSpec responseSpec;
 
-    @Mock
-    private FinnhubMapper finnhubMapper;
-
     private FinnhubClient finnhubClient;
 
     @BeforeEach
@@ -51,7 +50,7 @@ class FinnhubClientTest {
         when(webClientBuilder.baseUrl(anyString())).thenReturn(webClientBuilder);
         when(webClientBuilder.build()).thenReturn(webClient);
 
-        finnhubClient = new FinnhubClient(webClientBuilder, "test-api-key", finnhubMapper);
+        finnhubClient = new FinnhubClient(webClientBuilder, "test-api-key");
     }
 
     @Test

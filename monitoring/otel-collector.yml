@@ -45,6 +45,10 @@ exporters:
   debug:
     verbosity: detailed
 
+  # Loki exporter for logs
+  loki:
+    endpoint: "http://loki:3100/loki/api/v1/push"
+
 extensions:
   health_check:
     endpoint: 0.0.0.0:13133
@@ -67,6 +71,11 @@ service:
       receivers: [otlp]
       processors: [resource, batch]
       exporters: [prometheus, debug]
+
+    logs:
+      receivers: [otlp]
+      processors: [resource, batch]
+      exporters: [loki, debug]
 
   telemetry:
     logs:

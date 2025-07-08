@@ -1,11 +1,12 @@
 package com.techishthoughts.stocks.config;
 
-import io.micrometer.context.ContextRegistry;
-import io.micrometer.observation.ObservationRegistry;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
+
+import io.micrometer.context.ContextRegistry;
+import io.micrometer.observation.ObservationRegistry;
 
 /**
  * Configuration for distributed tracing with OpenTelemetry and context propagation.

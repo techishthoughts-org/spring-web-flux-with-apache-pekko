@@ -15,10 +15,15 @@ volumes:
     driver: local
 
 services:
+  # =============================================================================
+  # MONITORING SERVICES (Profile: monitoring)
+  # =============================================================================
+
   jaeger:
     image: jaegertracing/all-in-one:latest
     container_name: stocks-jaeger
     restart: unless-stopped
+    profiles: ["monitoring", "full"]
     ports:
       - "16686:16686"
       - "14268:14268"
@@ -37,6 +42,7 @@ services:
     image: prom/prometheus:latest
     container_name: stocks-prometheus
     restart: unless-stopped
+    profiles: ["monitoring", "full"]
     ports:
       - "9090:9090"
     command:
@@ -63,6 +69,7 @@ services:
     image: grafana/loki:latest
     container_name: stocks-loki
     restart: unless-stopped
+    profiles: ["monitoring", "full"]
     ports:
       - "3100:3100"
     command: -config.file=/etc/loki/local-config.yaml
@@ -81,9 +88,12 @@ services:
     image: grafana/promtail:latest
     container_name: stocks-promtail
     restart: unless-stopped
+    profiles: ["monitoring", "full"]
+    ports:
+      - "9080:9080"
     volumes:
       - ./monitoring/promtail.yml:/etc/promtail/config.yml:ro
-      - app-logs:/app/logs:ro
+      - ./logs:/app/logs:ro
     command: -config.file=/etc/promtail/config.yml
     networks:
       - stocks-network
@@ -94,6 +104,7 @@ services:
     image: grafana/grafana:latest
     container_name: stocks-grafana
     restart: unless-stopped
+    profiles: ["monitoring", "full"]
     ports:
       - "3000:3000"
     environment:
@@ -123,6 +134,7 @@ services:
     image: grafana/pyroscope:latest
     container_name: stocks-pyroscope
     restart: unless-stopped
+    profiles: ["monitoring", "full"]
     ports:
       - "4040:4040"
     networks:
@@ -139,6 +151,7 @@ services:
     image: prom/alertmanager:latest
     container_name: stocks-alertmanager
     restart: unless-stopped
+    profiles: ["monitoring", "full"]
     ports:
       - "9093:9093"
     command:
@@ -161,11 +174,12 @@ services:
     image: otel/opentelemetry-collector-contrib:latest
     container_name: stocks-otel-collector
     restart: unless-stopped
+    profiles: ["monitoring", "full"]
     ports:
-      - "4317:4317"
-      - "4318:4318"
-      - "8888:8888"
-      - "8889:8889"
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "8888:8888"   # Prometheus metrics
+      - "8889:8889"   # Prometheus exporter
     command: ["--config=/etc/otel-collector-config.yaml"]
     volumes:
       - ./monitoring/otel-collector.yml:/etc/otel-collector-config.yaml:ro
@@ -174,6 +188,53 @@ services:
     depends_on:
       - prometheus
 
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: stocks-node-exporter
+    restart: unless-stopped
+    profiles: ["monitoring", "full"]
+    ports:
+      - "9100:9100"
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      - stocks-network
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: stocks-cadvisor
+    restart: unless-stopped
+    profiles: ["cadvisor"] # Optional service
+    ports:
+      - "8082:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/run/containers:/var/run/containers:ro
+      - /dev/disk/:/dev/disk:ro
+    networks:
+      - stocks-network
+    privileged: true
+    devices:
+      - /dev/kmsg
+    command:
+      - '--housekeeping_interval=10s'
+      - '--max_housekeeping_interval=15s'
+      - '--allow_dynamic_housekeeping=true'
+      - '--storage_duration=1m0s'
+      - '--docker_only=false'
+
+  # =============================================================================
+  # APPLICATION SERVICE (Profile: app)
+  # =============================================================================
+
   stocks-service:
     build:
       context: .
@@ -181,6 +242,7 @@ services:
       target: runtime
     container_name: stocks-service
     restart: unless-stopped
+    profiles: ["app", "full"]
     ports:
       - "8080:8080"
       - "8081:8081"
@@ -194,7 +256,25 @@ services:
       LOGGING_LEVEL_COM_TECHISHTHOUGHTS: DEBUG
       LOGGING_FILE_PATH: /app/logs
       LOGGING_PATTERN_FILE: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
+      # JVM Optimization with OpenTelemetry
       JAVA_OPTS: >-
+        -javaagent:/app/opentelemetry-javaagent.jar
+        --add-opens=java.base/java.lang=ALL-UNNAMED
+        --add-opens=java.base/java.lang.reflect=ALL-UNNAMED
+        --add-opens=java.base/java.util=ALL-UNNAMED
+        --add-opens=java.base/java.util.concurrent=ALL-UNNAMED
+        --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED
+        --add-opens=java.base/java.util.concurrent.locks=ALL-UNNAMED
+        --add-opens=java.base/java.net=ALL-UNNAMED
+        --add-opens=java.base/java.io=ALL-UNNAMED
+        --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
+        --add-opens=java.base/sun.net.www.protocol.http=ALL-UNNAMED
+        --add-opens=java.base/sun.net.www.protocol.https=ALL-UNNAMED
+        --add-opens=java.base/java.security=ALL-UNNAMED
+        --add-opens=java.base/javax.net.ssl=ALL-UNNAMED
+        --add-opens=java.logging/java.util.logging=ALL-UNNAMED
+        --add-opens=java.management/java.lang.management=ALL-UNNAMED
+        --add-opens=java.management/sun.management=ALL-UNNAMED
         -XX:+UseContainerSupport
         -XX:MaxRAMPercentage=80.0
         -XX:+UnlockExperimentalVMOptions
@@ -230,89 +310,25 @@ services:
         -XX:+UseAdler32Intrinsics
         -XX:+UseCRC32Intrinsics
         -XX:+UseCRC32CIntrinsics
-      OTEL_SERVICE_NAME: stocks-service
-      OTEL_RESOURCE_ATTRIBUTES: service.name=stocks-service,service.version=1.0.0,deployment.environment=docker
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
-      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
-      OTEL_METRICS_EXPORTER: otlp
-      OTEL_LOGS_EXPORTER: otlp
-      PEKKO_ACTOR_PROVIDER: local
-      PEKKO_ACTOR_DEFAULT_DISPATCHER_THROUGHPUT: 10
-      PEKKO_LOG_CONFIG_ON_START: "off"
-      PYROSCOPE_ENABLED: ${PYROSCOPE_ENABLED}
-      PYROSCOPE_APPLICATION_NAME: ${PYROSCOPE_APPLICATION_NAME}
-      PYROSCOPE_SERVER_ADDRESS: ${PYROSCOPE_SERVER_ADDRESS}
+
+      # OpenTelemetry Configuration
+      OTEL_SERVICE_NAME: "stocks-service"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+      OTEL_TRACES_EXPORTER: "otlp"
+      OTEL_LOGS_EXPORTER: "none"
+      OTEL_METRICS_EXPORTER: "none"
+      OTEL_PROPAGATORS: "tracecontext,baggage"
+      OTEL_RESOURCE_ATTRIBUTES: "service.name=stocks-service,service.version=1.0.0,deployment.environment=docker"
     volumes:
       - app-logs:/app/logs
     networks:
       - stocks-network
     depends_on:
       - otel-collector
-      - prometheus
-      - loki
-      - jaeger
-      - pyroscope
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-    profiles:
-      - default
-
-  node-exporter:
-    image: prom/node-exporter:latest
-    container_name: stocks-node-exporter
-    restart: unless-stopped
-    ports:
-      - "9100:9100"
-    command:
-      - '--path.procfs=/host/proc'
-      - '--path.rootfs=/rootfs'
-      - '--path.sysfs=/host/sys'
-      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
-    volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
-    networks:
-      - stocks-network
-
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest
-    container_name: stocks-cadvisor
-    restart: unless-stopped
-    ports:
-      - "8082:8080"
-    volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:ro
-      - /sys:/sys:ro
-      - /dev/disk/:/dev/disk:ro
-    privileged: true
-    devices:
-      - /dev/kmsg
-    networks:
-      - stocks-network
-
-  wiremock:
-    image: wiremock/wiremock:latest
-    container_name: stocks-wiremock
-    restart: unless-stopped
-    ports:
-      - "8089:8080"
-    volumes:
-      - ./src/test/resources/wiremock:/home/wiremock
-    command: ["--global-response-templating", "--verbose"]
-    networks:
-      - stocks-network
-    depends_on:
-      - stocks-service
-    # If /__admin/health does not exist, use /__admin or remove healthcheck
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/__admin"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    profiles:
-      - testing
+      start_period: 40s

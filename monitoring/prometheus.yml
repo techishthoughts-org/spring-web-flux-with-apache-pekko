@@ -28,7 +28,7 @@ scrape_configs:
   # Stocks Application (Main App)
   - job_name: 'stocks-app'
     static_configs:
-      - targets: ['stocks-service:8081']
+      - targets: ['stocks-service:8081', '192.168.1.66:8080']
     scrape_interval: 15s
     metrics_path: /actuator/prometheus
     scrape_timeout: 10s
@@ -48,12 +48,14 @@ scrape_configs:
     scrape_interval: 30s
     metrics_path: /metrics
 
-  # cAdvisor (Container metrics)
+  # cAdvisor (Container metrics) - Optional, only available with --profile cadvisor
   - job_name: 'cadvisor'
     static_configs:
       - targets: ['cadvisor:8080']
     scrape_interval: 30s
     metrics_path: /metrics
+    # Note: This target will show as down if cAdvisor is not running (normal behavior)
+    # External port: 8082
 
   # Redis
   - job_name: 'redis'

@@ -3,15 +3,18 @@ package com.techishthoughts.stocks.unit.adapter.in.web;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.techishthoughts.stocks.adapter.in.web.StockController;
-import com.techishthoughts.stocks.application.StockUseCases;
-import com.techishthoughts.stocks.domain.Stock;
 import java.time.Instant;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.techishthoughts.stocks.adapter.in.web.StockController;
+import com.techishthoughts.stocks.application.StockUseCases;
+import com.techishthoughts.stocks.domain.Stock;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -32,41 +35,39 @@ class StockControllerTest {
     @Test
     void shouldReturnStockBySymbol() {
         // Given
-        String symbol = "aapl";
-        String upperCaseSymbol = "AAPL";
-        Stock expectedStock = createTestStock(upperCaseSymbol);
+        String symbol = "AAPL";
+        Stock expectedStock = createTestStock(symbol);
 
-        when(stockService.getStock(upperCaseSymbol)).thenReturn(Mono.just(expectedStock));
+        when(stockService.getStock(symbol)).thenReturn(Mono.just(expectedStock));
 
         // When
-        Mono<Stock> result = stockController.one(symbol);
+        Mono<Stock> result = stockController.getStock(symbol);
 
         // Then
         StepVerifier.create(result)
                 .expectNext(expectedStock)
                 .verifyComplete();
 
-        verify(stockService).getStock(upperCaseSymbol);
+        verify(stockService).getStock(symbol);
     }
 
     @Test
-    void shouldConvertSymbolToUpperCase() {
+    void shouldPassSymbolAsIs() {
         // Given
-        String lowercaseSymbol = "msft";
-        String expectedUppercase = "MSFT";
-        Stock expectedStock = createTestStock(expectedUppercase);
+        String symbol = "msft";
+        Stock expectedStock = createTestStock(symbol);
 
-        when(stockService.getStock(expectedUppercase)).thenReturn(Mono.just(expectedStock));
+        when(stockService.getStock(symbol)).thenReturn(Mono.just(expectedStock));
 
         // When
-        Mono<Stock> result = stockController.one(lowercaseSymbol);
+        Mono<Stock> result = stockController.getStock(symbol);
 
         // Then
         StepVerifier.create(result)
                 .expectNext(expectedStock)
                 .verifyComplete();
 
-        verify(stockService).getStock(expectedUppercase);
+        verify(stockService).getStock(symbol);
     }
 
     @Test
@@ -76,7 +77,7 @@ class StockControllerTest {
         when(stockService.getStock(symbol)).thenReturn(Mono.empty());
 
         // When
-        Mono<Stock> result = stockController.one(symbol);
+        Mono<Stock> result = stockController.getStock(symbol);
 
         // Then
         StepVerifier.create(result)
@@ -93,7 +94,7 @@ class StockControllerTest {
         when(stockService.getStock(symbol)).thenReturn(Mono.error(error));
 
         // When
-        Mono<Stock> result = stockController.one(symbol);
+        Mono<Stock> result = stockController.getStock(symbol);
 
         // Then
         StepVerifier.create(result)
@@ -113,7 +114,7 @@ class StockControllerTest {
         when(stockService.getAllStocks()).thenReturn(Flux.just(stock1, stock2, stock3));
 
         // When
-        Flux<Stock> result = stockController.all();
+        Flux<Stock> result = stockController.getAllStocks();
 
         // Then
         StepVerifier.create(result)
@@ -131,7 +132,7 @@ class StockControllerTest {
         when(stockService.getAllStocks()).thenReturn(Flux.empty());
 
         // When
-        Flux<Stock> result = stockController.all();
+        Flux<Stock> result = stockController.getAllStocks();
 
         // Then
         StepVerifier.create(result)
@@ -147,7 +148,7 @@ class StockControllerTest {
         when(stockService.getAllStocks()).thenReturn(Flux.error(error));
 
         // When
-        Flux<Stock> result = stockController.all();
+        Flux<Stock> result = stockController.getAllStocks();
 
         // Then
         StepVerifier.create(result)

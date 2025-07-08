@@ -5,7 +5,7 @@ spring:
   codec:
     max-in-memory-size: 10MB
   application:
-    name: stocks
+    name: ${OTEL_SERVICE_NAME:stocks}
   sleuth:
     enabled: false  # Disable Sleuth in favor of Micrometer Tracing
 
@@ -17,10 +17,18 @@ management:
         include: "*"
   endpoint:
     health:
-      show-details: always
+      show-details: when-authorized
+      show-components: never
     prometheus:
       enabled: true
     metrics:
+      enabled: true
+  health:
+    defaults:
+      enabled: true
+    diskspace:
+      enabled: true
+    ping:
       enabled: true
   tracing:
     sampling:
@@ -28,6 +36,7 @@ management:
   otlp:
     tracing:
       endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+      headers: ${OTEL_EXPORTER_OTLP_HEADERS:}
   prometheus:
     metrics:
       export:
@@ -52,15 +61,6 @@ otel:
       service.version: ${project.version:1.0.0}
       deployment.environment: ${DEPLOYMENT_ENVIRONMENT:local}
 
-# Grafana Pyroscope Continuous Profiling Configuration
-pyroscope:
-  enabled: ${PYROSCOPE_ENABLED:true}
-  application-name: ${PYROSCOPE_APPLICATION_NAME:${spring.application.name}}
-  server-address: ${PYROSCOPE_SERVER_ADDRESS:http://localhost:4040}
-  basic-auth-user: ${PYROSCOPE_BASIC_AUTH_USER:}
-  basic-auth-password: ${PYROSCOPE_BASIC_AUTH_PASSWORD:}
-  tenant-id: ${PYROSCOPE_TENANT_ID:}
-
 logging:
   level:
     com.techishthoughts.stocks: INFO
@@ -69,7 +69,6 @@ logging:
     net.logstash.logback: WARN
     io.micrometer.tracing: DEBUG
     io.opentelemetry: DEBUG
-    io.pyroscope: INFO
   file:
     path: ${LOG_PATH:logs}
   pattern:

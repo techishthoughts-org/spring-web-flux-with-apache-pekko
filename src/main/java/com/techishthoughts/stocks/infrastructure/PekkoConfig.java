@@ -1,12 +1,10 @@
 package com.techishthoughts.stocks.infrastructure;
 
-import com.techishthoughts.stocks.adapter.out.finnhub.dto.StockDetails;
-import com.techishthoughts.stocks.adapter.out.mapper.StockMapper;
-import com.techishthoughts.stocks.application.port.out.StockRepository;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.ActorSystem;
 import org.apache.pekko.actor.typed.Behavior;
@@ -19,9 +17,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.techishthoughts.stocks.adapter.out.finnhub.dto.StockDetails;
+import com.techishthoughts.stocks.adapter.out.mapper.StockMapper;
+import com.techishthoughts.stocks.application.port.out.StockRepository;
+
 /**
- * Configuration for the Pekko actor system.
- * Creates and manages the actor system and provides beans for Spring to inject.
+ * Configuration for Pekko Actor System.
+ * This class sets up the actor system and provides beans for dependency injection.
  */
 @Configuration
 public class PekkoConfig {

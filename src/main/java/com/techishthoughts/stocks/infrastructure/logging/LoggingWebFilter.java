@@ -32,7 +32,11 @@ import reactor.core.publisher.Mono;
 @Order(1)
 public class LoggingWebFilter implements WebFilter {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
+
+    public LoggingWebFilter(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     @Override
     @NonNull

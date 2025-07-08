@@ -35,13 +35,6 @@ receivers:
     webhook_configs:
       - url: 'http://localhost:3000/api/alertmanager/webhook'
         send_resolved: true
-        title: 'CRITICAL: {{ .GroupLabels.alertname }}'
-        text: |
-          {{ range .Alerts }}
-          Alert: {{ .Annotations.summary }}
-          Description: {{ .Annotations.description }}
-          Labels: {{ .Labels }}
-          {{ end }}
     # Uncomment below to enable email notifications
     # email_configs:
     #   - to: 'critical-alerts@stocks-app.com'
@@ -57,13 +50,6 @@ receivers:
     webhook_configs:
       - url: 'http://localhost:3000/api/alertmanager/webhook'
         send_resolved: true
-        title: 'WARNING: {{ .GroupLabels.alertname }}'
-        text: |
-          {{ range .Alerts }}
-          Alert: {{ .Annotations.summary }}
-          Description: {{ .Annotations.description }}
-          Labels: {{ .Labels }}
-          {{ end }}
     # Uncomment below to enable email notifications
     # email_configs:
     #   - to: 'warning-alerts@stocks-app.com'
