@@ -43,7 +43,7 @@ make test
 - **Grafana**: http://localhost:3000 (admin/admin)
 - **Prometheus**: http://localhost:9090
 - **Jaeger**: http://localhost:16686
-- **Loki**: http://localhost:3100
+- **ClickHouse**: http://localhost:8123
 
 ## 🎯 Features
 
@@ -61,7 +61,7 @@ make test
 - **Health Checks**: Application and component health monitoring
 - **Metrics Collection**: Prometheus metrics export
 - **Distributed Tracing**: OpenTelemetry integration with Jaeger
-- **Structured Logging**: JSON logging with correlation IDs exported to Loki
+- **Structured Logging**: JSON logging with correlation IDs exported to ClickHouse
 
 ## 📚 API Documentation
 

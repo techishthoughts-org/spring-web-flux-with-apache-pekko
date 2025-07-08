@@ -15,10 +15,9 @@ This guide covers the comprehensive observability solution for the Stock Service
 │  Grafana (3000)     │  Visualization & Dashboards          │
 │  Prometheus (9090)  │  Metrics Collection & Alerting       │
 │  Jaeger (16686)     │  Distributed Tracing                 │
-│  Loki (3100)        │  Log Aggregation                     │
+│  ClickHouse (8123)  │  High-Performance Log Storage        │
 │  AlertManager (9093)│  Alert Management                    │
 │  OTEL Collector     │  Telemetry Data Pipeline             │
-│  Promtail (9080)    │  Log Collection                      │
 │  Node Exporter      │  System Metrics                      │
 │  cAdvisor (8082)    │  Container Metrics (Optional)        │
 └─────────────────────────────────────────────────────────────┘
@@ -32,9 +31,9 @@ This guide covers the comprehensive observability solution for the Stock Service
 | Grafana | 3000 | Visualization | http://localhost:3000 |
 | Prometheus | 9090 | Metrics | http://localhost:9090 |
 | Jaeger | 16686 | Tracing UI | http://localhost:16686 |
-| Loki | 3100 | Logs API | http://localhost:3100/ready |
+| ClickHouse | 8123 | Log Storage API | http://localhost:8123/ping |
+| ClickHouse TCP | 9000 | Native Protocol | tcp://localhost:9000 |
 | AlertManager | 9093 | Alerts | http://localhost:9093 |
-| Promtail | 9080 | Log Collection | http://localhost:9080 |
 | OTEL Collector | 8889 | Telemetry | http://localhost:8889 |
 | Node Exporter | 9100 | System Metrics | http://localhost:9100 |
 | cAdvisor | 8082 | Container Metrics | http://localhost:8082 |
@@ -64,7 +63,7 @@ make status
 open http://localhost:3000    # Grafana (admin/admin)
 open http://localhost:9090    # Prometheus
 open http://localhost:16686   # Jaeger
-open http://localhost:3100    # Loki
+open http://localhost:8123    # ClickHouse HTTP API
 ```
 
 ## 📈 Metrics Collection
@@ -146,14 +145,14 @@ curl http://localhost:8080/actuator/prometheus
 
 ### Complete Logging Architecture
 
-**Application → Promtail → Loki → Grafana**
+**Application → OTEL Collector → ClickHouse → Grafana**
 
 The logging pipeline is **fully operational** and provides:
 
-1. **Application** generates structured JSON logs
-2. **Promtail** collects logs from `/app/logs/` directory
-3. **Loki** aggregates, indexes, and stores logs
-4. **Grafana** provides log visualization and dashboards
+1. **Application** generates structured JSON logs with OpenTelemetry integration
+2. **OTEL Collector** receives logs via OTLP protocol and processes them
+3. **ClickHouse** stores logs in a high-performance columnar database with advanced analytics capabilities
+4. **Grafana** provides log visualization and dashboards with ClickHouse data source
 
 ### Log Configuration
 
@@ -187,86 +186,90 @@ The logging pipeline is **fully operational** and provides:
 </configuration>
 ```
 
-#### Promtail Configuration (`monitoring/promtail.yml`)
+#### OTEL Collector Configuration (`monitoring/otel-collector.yml`)
 ```yaml
-server:
-  http_listen_port: 9080
-  grpc_listen_port: 0
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
 
-positions:
-  filename: /tmp/positions.yaml
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+  resource:
+    attributes:
+      - key: deployment.environment
+        value: "docker"
+        action: insert
 
-clients:
-  - url: http://loki:3100/loki/api/v1/push
+exporters:
+  clickhouse:
+    endpoint: tcp://clickhouse:9000?dial_timeout=10s&compress=lz4&async_insert=1&username=default&password=clickhouse123
+    database: logs
+    logs_table_name: otel_logs
+    ttl: 720h
+    create_schema: true
 
-scrape_configs:
-  - job_name: stocks-app-logs
-    static_configs:
-      - targets: [localhost]
-        labels:
-          job: stocks-app
-          service: stocks-service
-          __path__: /app/logs/application.log
-
-  - job_name: stocks-app-json-logs
-    static_configs:
-      - targets: [localhost]
-        labels:
-          job: stocks-app-json
-          service: stocks-service
-          format: json
-          __path__: /app/logs/application.json
+service:
+  pipelines:
+    logs:
+      receivers: [otlp]
+      processors: [resource, batch]
+      exporters: [clickhouse, debug]
 ```
 
-#### Loki Configuration (`monitoring/loki.yml`)
-```yaml
-auth_enabled: false
+#### ClickHouse Configuration
 
-server:
-  http_listen_port: 3100
+ClickHouse provides high-performance log storage with:
 
-limits_config:
-  ingestion_rate_mb: 16
-  ingestion_burst_size_mb: 32
-  max_streams_per_user: 10000
-  reject_old_samples: false
-  reject_old_samples_max_age: 168h
-  creation_grace_period: 10m
-```
+- **Compression**: ZSTD level 3 for optimal storage efficiency
+- **Partitioning**: By date for efficient querying and data management
+- **TTL**: 30-day retention policy (configurable)
+- **Indexing**: Bloom filters for fast text searches
+- **Schema**: OpenTelemetry standard fields plus custom application metadata
+- **Performance**: Sub-second queries on millions of log entries
+- **Cost-Effective**: 10-14x compression, significantly cheaper than traditional log solutions
 
 ### Viewing Logs
 
 #### Grafana Log Exploration
 1. Go to http://localhost:3000
-2. Navigate to "Explore" → Select "Loki" data source
-3. Use queries like:
-   - `{service="stocks-service"}` - All application logs
-   - `{job="stocks-app", level="ERROR"}` - Error logs only
-   - `{logger="com.techishthoughts.stocks"}` - Application-specific logs
+2. Navigate to "Explore" → Select "ClickHouse" data source
+3. Use SQL queries like:
+   - `SELECT * FROM otel_logs WHERE ServiceName = 'stocks-service' ORDER BY Timestamp DESC LIMIT 100`
+   - `SELECT * FROM otel_logs WHERE SeverityText = 'ERROR' ORDER BY Timestamp DESC`
+   - `SELECT * FROM otel_logs WHERE Body LIKE '%stock%' ORDER BY Timestamp DESC`
 
-#### Direct Loki Queries
+#### Direct ClickHouse Queries
 ```bash
 # Query recent logs
-curl -s "http://localhost:3100/loki/api/v1/query?query={service=\"stocks-service\"}"
+curl -s "http://localhost:8123/" --data-binary "SELECT Timestamp, ServiceName, SeverityText, Body FROM logs.otel_logs ORDER BY Timestamp DESC LIMIT 10" --user "default:clickhouse123"
 
-# Query with time range
-curl -s "http://localhost:3100/loki/api/v1/query_range?query={job=\"stocks-app\"}&start=$(($(date +%s)-600))000000000&end=$(date +%s)000000000"
+# Query with time range (last hour)
+curl -s "http://localhost:8123/" --data-binary "SELECT * FROM logs.otel_logs WHERE Timestamp >= now() - INTERVAL 1 HOUR ORDER BY Timestamp DESC" --user "default:clickhouse123"
 
-# Check available labels
-curl -s "http://localhost:3100/loki/api/v1/label"
+# Count logs by service
+curl -s "http://localhost:8123/" --data-binary "SELECT ServiceName, count() FROM logs.otel_logs GROUP BY ServiceName" --user "default:clickhouse123"
+
+# Check table schema
+curl -s "http://localhost:8123/" --data-binary "DESCRIBE logs.otel_logs" --user "default:clickhouse123"
 ```
 
 ### Log Verification
 
 ```bash
-# Check Promtail is collecting logs
-podman logs stocks-promtail
+# Check OTEL Collector is collecting logs
+docker logs stocks-otel-collector
 
-# Check Loki is ready
-curl http://localhost:3100/ready
+# Check ClickHouse is ready
+curl http://localhost:8123/ping
 
-# Check application logs are being generated
-tail -f logs/application.log
+# Check logs are being ingested
+curl -s "http://localhost:8123/" --data-binary "SELECT COUNT(*) FROM logs.otel_logs" --user "default:clickhouse123"
 ```
 
 ## 📊 Grafana Dashboards

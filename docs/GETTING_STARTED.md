@@ -58,7 +58,7 @@ curl http://localhost:8080/stocks/AAPL
 - **Grafana**: http://localhost:3000 (admin/admin)
 - **Prometheus**: http://localhost:9090
 - **Jaeger**: http://localhost:16686
-- **Loki**: http://localhost:3100
+- **ClickHouse**: http://localhost:8123
 
 ## 📁 Project Structure
 
@@ -192,12 +192,12 @@ otel:
 
 ### Complete Logging Pipeline
 
-**Application → Promtail → Loki → Grafana**
+**Application → OTEL Collector → ClickHouse → Grafana**
 
-1. **Application** generates structured JSON logs
-2. **Promtail** collects logs from `/logs/` directory
-3. **Loki** aggregates and indexes logs
-4. **Grafana** provides log visualization and dashboards
+1. **Application** generates structured JSON logs with OpenTelemetry integration
+2. **OTEL Collector** receives logs via OTLP protocol and processes them
+3. **ClickHouse** stores logs in a high-performance columnar database
+4. **Grafana** provides log visualization and dashboards with SQL queries
 
 ### Monitoring Stack Components
 

@@ -11,7 +11,7 @@ volumes:
     driver: local
   grafana-data:
     driver: local
-  loki-data:
+  clickhouse-data:
     driver: local
 
 services:
@@ -65,40 +65,32 @@ services:
       timeout: 10s
       retries: 3
 
-  loki:
-    image: grafana/loki:latest
-    container_name: stocks-loki
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: stocks-clickhouse
     restart: unless-stopped
     profiles: ["monitoring", "full"]
     ports:
-      - "3100:3100"
-    command: -config.file=/etc/loki/local-config.yaml
+      - "8123:8123"   # HTTP
+      - "9000:9000"   # TCP
+    environment:
+      CLICKHOUSE_DB: logs
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: clickhouse123
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
     volumes:
-      - ./monitoring/loki.yml:/etc/loki/local-config.yaml:ro
-      - loki-data:/loki
+      - clickhouse-data:/var/lib/clickhouse
+      - ./monitoring/clickhouse/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./monitoring/clickhouse/config.xml:/etc/clickhouse-server/config.d/logging.xml:ro
     networks:
       - stocks-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3100/ready"]
+      test: ["CMD", "curl", "-f", "http://localhost:8123/ping"]
       interval: 30s
       timeout: 10s
       retries: 3
 
-  promtail:
-    image: grafana/promtail:latest
-    container_name: stocks-promtail
-    restart: unless-stopped
-    profiles: ["monitoring", "full"]
-    ports:
-      - "9080:9080"
-    volumes:
-      - ./monitoring/promtail.yml:/etc/promtail/config.yml:ro
-      - ./logs:/app/logs:ro
-    command: -config.file=/etc/promtail/config.yml
-    networks:
-      - stocks-network
-    depends_on:
-      - loki
+
 
   grafana:
     image: grafana/grafana:latest
@@ -111,7 +103,7 @@ services:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
       GF_USERS_ALLOW_SIGN_UP: "false"
-      GF_INSTALL_PLUGINS: grafana-piechart-panel,grafana-worldmap-panel,grafana-clock-panel
+      GF_INSTALL_PLUGINS: grafana-piechart-panel,grafana-worldmap-panel,grafana-clock-panel,grafana-clickhouse-datasource
       GF_FEATURE_TOGGLES_ENABLE: traceqlEditor
     volumes:
       - grafana-data:/var/lib/grafana
@@ -121,7 +113,7 @@ services:
       - stocks-network
     depends_on:
       - prometheus
-      - loki
+      - clickhouse
       - jaeger
       - otel-collector
     healthcheck:
@@ -316,7 +308,7 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
       OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
       OTEL_TRACES_EXPORTER: "otlp"
-      OTEL_LOGS_EXPORTER: "none"
+      OTEL_LOGS_EXPORTER: "otlp"
       OTEL_METRICS_EXPORTER: "none"
       OTEL_PROPAGATORS: "tracecontext,baggage"
       OTEL_RESOURCE_ATTRIBUTES: "service.name=stocks-service,service.version=1.0.0,deployment.environment=docker"

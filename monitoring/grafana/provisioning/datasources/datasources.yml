@@ -3,7 +3,7 @@ apiVersion: 1
 deleteDatasources:
   - name: Prometheus
     orgId: 1
-  - name: Loki
+  - name: ClickHouse
     orgId: 1
   - name: Jaeger
     orgId: 1
@@ -28,24 +28,40 @@ datasources:
           datasourceUid: jaeger-uid
           urlDisplayLabel: 'View Trace'
 
-  # Loki - Logs
-  - name: Loki
-    type: loki
+  # ClickHouse - Logs
+  - name: ClickHouse
+    type: grafana-clickhouse-datasource
     access: proxy
     orgId: 1
-    url: http://loki:3100
+    uid: clickhouse-uid
+    url: http://clickhouse:8123
     basicAuth: false
     isDefault: false
     version: 1
     editable: true
     jsonData:
-      maxLines: 1000
-      derivedFields:
-        - matcherRegex: "traceId=(\\w+)"
-          name: "TraceID"
-          url: "$${__value.raw}"
-          datasourceUid: "jaeger-uid"
-          urlDisplayLabel: "View Trace"
+      server: clickhouse
+      port: 8123
+      username: default
+      defaultDatabase: logs
+      protocol: http
+      secure: false
+      tlsSkipVerify: true
+      queryTimeout: 30
+      dialTimeout: 10
+      logs:
+        defaultTable: application_logs
+        defaultDatabase: logs
+        otelEnabled: true
+        otelVersion: v1
+        timeColumn: timestamp
+        levelColumn: level
+        messageColumn: message
+        traceIdColumn: trace_id
+        spanIdColumn: span_id
+        serviceNameColumn: service_name
+    secureJsonData:
+      password: clickhouse123
 
   # Jaeger - Distributed Tracing
   - name: Jaeger
@@ -60,7 +76,7 @@ datasources:
     editable: true
     jsonData:
       tracesToLogs:
-        datasourceUid: 'loki-uid'
+        datasourceUid: 'clickhouse-uid'
         tags: ['job', 'instance', 'pod', 'namespace']
         mappedTags: [
           { key: 'service.name', value: 'service' },

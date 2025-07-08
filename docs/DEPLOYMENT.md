@@ -104,7 +104,7 @@ services:
     depends_on:
       - prometheus
       - jaeger
-      - loki
+      - clickhouse
 
   # Monitoring services (profile: monitoring)
   prometheus:
