@@ -31,7 +31,7 @@
         <!-- Main Dependencies Versions -->
         <pekko.version>1.1.4</pekko.version>
         <scala.binary.version>2.13</scala.binary.version>
-        <jackson.version>2.19.1</jackson.version>
+        <jackson.version>2.19.2</jackson.version>
         <netty.version>4.2.2.Final</netty.version>
         <logstash-logback.version>8.1</logstash-logback.version>
 
