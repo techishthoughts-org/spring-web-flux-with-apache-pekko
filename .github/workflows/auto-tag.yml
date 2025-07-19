@@ -1,15 +1,16 @@
-name: Auto Tag & Release
+name: Auto Tag Creation
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
 
 jobs:
   auto-tag:
     uses: techishthoughts-org/java-workflows/.github/workflows/auto-tag-enhanced.yml@main
+    
     with:
-      java-version: '21'
-      create-release: true
-      upload-jar: true
+      java-version: '21'        
+      create-release: true        
+      upload-jar: true         
     secrets:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

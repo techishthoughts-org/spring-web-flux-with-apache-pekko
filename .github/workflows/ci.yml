@@ -1,18 +1,13 @@
 name: Java CI Pipeline
-
 on:
   push:
     branches: [main, develop]
   pull_request:
-
 jobs:
   java-ci:
     uses: techishthoughts-org/java-workflows/.github/workflows/java-ci-secure.yml@main
     with:
       java-version: '21'
       maven-args: '-B verify'
-      run-tests: true
-      upload-artifacts: true
     secrets:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
