@@ -1,39 +1,7 @@
 version: 2
 updates:
-  # Maven dependencies
   - package-ecosystem: "maven"
     directory: "/"
     schedule:
       interval: "weekly"
-      day: "monday"
-      time: "06:00"
     open-pull-requests-limit: 10
-    commit-message:
-      prefix: "deps"
-      prefix-development: "deps-dev"
-      include: "scope"
-    target-branch: "main"
-
-  # GitHub Actions
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "06:00"
-    open-pull-requests-limit: 5
-    commit-message:
-      prefix: "ci"
-      include: "scope"
-
-  # Docker
-  - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "06:00"
-    open-pull-requests-limit: 5
-    commit-message:
-      prefix: "docker"
-      include: "scope"

@@ -1,64 +1,15 @@
-name: 🤖 Dependabot Auto-Merge
+name: Dependabot Auto-merge
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
-
-permissions:
-  contents: write
-  pull-requests: write
-  checks: read
+    types: [opened, synchronize]
 
 jobs:
-  auto-merge:
-    name: 🤖 Auto-merge Dependabot PRs
-    runs-on: ubuntu-latest
-    if: github.actor == 'dependabot[bot]'
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: 🔍 Get Dependabot metadata
-        id: dependabot-metadata
-        uses: dependabot/fetch-metadata@v2
-        with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-
-      - name: 🔄 Enable auto-merge for patch and minor updates
-        if: steps.dependabot-metadata.outputs.update-type == 'version-update:semver-patch' || steps.dependabot-metadata.outputs.update-type == 'version-update:semver-minor'
-        run: |
-          gh pr merge --auto --squash "$PR_URL"
-          echo "🤖 Auto-merge enabled for ${{ steps.dependabot-metadata.outputs.update-type }} update"
-          echo "📋 Dependency: ${{ steps.dependabot-metadata.outputs.dependency-names }}"
-          echo "🔄 Update: ${{ steps.dependabot-metadata.outputs.previous-version }} → ${{ steps.dependabot-metadata.outputs.new-version }}"
-        env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: 🚨 Notify for major updates
-        if: steps.dependabot-metadata.outputs.update-type == 'version-update:semver-major'
-        run: |
-          echo "🚨 Major version update detected - requires manual review"
-          gh pr comment "$PR_URL" --body "🚨 **Major Version Update** - This PR requires manual review before merging due to potential breaking changes.<br/><br/>**Dependency**: \`${{ steps.dependabot-metadata.outputs.dependency-names }}\`<br/>**Update**: \`${{ steps.dependabot-metadata.outputs.previous-version }}\` → \`${{ steps.dependabot-metadata.outputs.new-version }}\`<br/><br/>Please review the changelog and test thoroughly before merging."
-        env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: 📊 Add merge info comment
-        if: steps.dependabot-metadata.outputs.update-type == 'version-update:semver-patch' || steps.dependabot-metadata.outputs.update-type == 'version-update:semver-minor'
-        run: |
-          gh pr comment "$PR_URL" --body "🤖 **Auto-merge enabled** for ${{ steps.dependabot-metadata.outputs.update-type }} update.<br/><br/>**Dependency**: \`${{ steps.dependabot-metadata.outputs.dependency-names }}\`<br/>**Update**: \`${{ steps.dependabot-metadata.outputs.previous-version }}\` → \`${{ steps.dependabot-metadata.outputs.new-version }}\`<br/><br/>ℹ️ This PR will be automatically merged once all required checks pass. No manual approval needed for patch/minor updates."
-        env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: 📈 Log auto-merge summary
-        if: steps.dependabot-metadata.outputs.update-type == 'version-update:semver-patch' || steps.dependabot-metadata.outputs.update-type == 'version-update:semver-minor'
-        run: |
-          echo "📊 Auto-merge Summary:"
-          echo "====================="
-          echo "🔖 Update Type: ${{ steps.dependabot-metadata.outputs.update-type }}"
-          echo "📦 Dependency: ${{ steps.dependabot-metadata.outputs.dependency-names }}"
-          echo "🔄 Version Change: ${{ steps.dependabot-metadata.outputs.previous-version }} → ${{ steps.dependabot-metadata.outputs.new-version }}"
-          echo "🤖 Action: Auto-merge enabled (will merge after CI passes)"
-          echo "🔗 PR URL: ${{ github.event.pull_request.html_url }}"
+  dependabot:
+    uses: techishthoughts-org/java-workflows/.github/workflows/dependabot-auto-merge-enhanced.yml@main
+    with:
+      auto-merge-minor: true
+      auto-merge-patch: true
+      run-tests: true
+    secrets:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
