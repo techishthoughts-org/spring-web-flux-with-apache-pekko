@@ -3,11 +3,14 @@ on:
   push:
     branches: [main, develop]
   pull_request:
+
 jobs:
   java-ci:
-    uses: techishthoughts-org/java-workflows/.github/workflows/java-ci-secure.yml@main
+    uses: techishthoughts-org/java-workflows/.github/workflows/java-ci-universal.yml@v2.0.0
     with:
       java-version: '21'
-      maven-args: '-B verify'
-    secrets:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      build-tool: 'maven'
+      maven-opts: '-Xmx4g'
+      test-pattern: '**/*Test.java'
+      os-matrix: 'ubuntu-latest,windows-latest'
+      coverage-tool: 'jacoco'
