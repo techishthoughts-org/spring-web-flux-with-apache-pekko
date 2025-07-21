@@ -5,9 +5,8 @@ on:
     branches: [ main ]
 
 jobs:
-    auto-tag:
+  auto-tag:
     uses: techishthoughts-org/java-workflows/.github/workflows/auto-tag-enhanced.yml@v1.0.0
-
     with:
       java-version: '21'
       run-tests: true
