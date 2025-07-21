@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   auto-tag:
-    uses: techishthoughts-org/java-workflows/.github/workflows/auto-tag-enhanced.yml@v1.0.0
+    uses: techishthoughts-org/java-workflows/.github/workflows/auto-tag-enhanced.yml@v2.0.5
     with:
       java-version: '21'
       run-tests: true
