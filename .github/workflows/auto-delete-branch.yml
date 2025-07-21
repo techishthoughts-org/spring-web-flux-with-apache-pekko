@@ -1,11 +1,9 @@
 name: Branch Cleanup
 
 on:
-  push:
-    branches: [ main, develop ]
   pull_request:
-    branches: [ main, develop ]
-    types: [opened, synchronize, closed, ready_for_review]
+    types: [closed]
+    # Only trigger when PRs are actually closed (not just opened/updated)
 
 permissions:
   contents: write
@@ -14,6 +12,8 @@ permissions:
 
 jobs:
   cleanup:
+    # Only run when PR is closed and not merged (to avoid deleting merged branches)
+    if: github.event.pull_request.merged == false
     uses: techishthoughts-org/java-workflows/.github/workflows/auto-delete-branch-enhanced.yml@v1.0.0
     with:
       protected-branches: 'main,develop'

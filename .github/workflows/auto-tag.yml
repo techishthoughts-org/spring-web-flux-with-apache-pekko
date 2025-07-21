@@ -2,9 +2,16 @@ name: Auto Tag Creation
 
 on:
   push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main, develop ]
+    branches: [ main ]
+    paths:
+      - 'pom.xml'
+      - 'VERSION'
+      - 'package.json'
+      - 'src/**'
+      - 'Dockerfile'
+      - '.github/workflows/auto-tag.yml'
+  release:
+    types: [published]
 
 permissions:
   contents: write
