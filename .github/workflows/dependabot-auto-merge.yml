@@ -6,10 +6,10 @@ on:
 
 jobs:
   dependabot:
-    uses: techishthoughts-org/java-workflows/.github/workflows/dependabot-auto-merge-enhanced.yml@main
+    uses: techishthoughts-org/java-workflows/.github/workflows/dependabot-auto-merge-enhanced.yml@v1.0.0
     with:
       auto-merge-minor: true
       auto-merge-patch: true
       run-tests: true
     secrets:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

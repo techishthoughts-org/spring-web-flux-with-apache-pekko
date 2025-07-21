@@ -5,12 +5,13 @@ on:
     branches: [ main ]
 
 jobs:
-  auto-tag:
-    uses: techishthoughts-org/java-workflows/.github/workflows/auto-tag-enhanced.yml@main
-    
+    auto-tag:
+    uses: techishthoughts-org/java-workflows/.github/workflows/auto-tag-enhanced.yml@v1.0.0
+
     with:
-      java-version: '21'        
-      create-release: true        
-      upload-jar: true         
+      java-version: '21'
+      run-tests: true
+      build-docker: true
+      create-changelog: true
     secrets:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -6,9 +6,9 @@ on:
 
 jobs:
   cleanup:
-    uses: techishthoughts-org/java-workflows/.github/workflows/auto-delete-branch-enhanced.yml@main
+    uses: techishthoughts-org/java-workflows/.github/workflows/auto-delete-branch-enhanced.yml@v1.0.0
     with:
       protected-branches: 'main,develop'
       add-comment: true
     secrets:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
