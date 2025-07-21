@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   java-ci:
-    uses: techishthoughts-org/java-workflows/.github/workflows/java-ci-universal.yml@v2.0.2
+    uses: techishthoughts-org/java-workflows/.github/workflows/java-ci-universal.yml@v2.0.3
     with:
       java-version: '21'
       build-tool: 'maven'
