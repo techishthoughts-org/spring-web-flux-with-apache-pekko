@@ -1,8 +1,11 @@
 name: Dependabot Auto-merge
 
 on:
+  push:
+    branches: [ main, develop ]
   pull_request:
-    types: [opened, synchronize]
+    branches: [ main, develop ]
+    types: [opened, synchronize, ready_for_review]
 
 permissions:
   contents: write
@@ -15,6 +18,5 @@ jobs:
     with:
       auto-merge-minor: true
       auto-merge-patch: true
-      run-tests: true
     secrets:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
