@@ -39,7 +39,7 @@
         <mapstruct.version>1.6.3</mapstruct.version>
 
         <!-- Testing Framework Versions -->
-        <cucumber.version>7.25.0</cucumber.version>
+        <cucumber.version>7.27.0</cucumber.version>
         <jmh.version>1.37</jmh.version>
 
         <!-- Plugin Versions -->
