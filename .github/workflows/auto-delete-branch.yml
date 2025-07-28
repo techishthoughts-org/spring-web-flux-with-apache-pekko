@@ -14,7 +14,7 @@ jobs:
   cleanup:
     # Only run when PR is closed and not merged (to avoid deleting merged branches)
     if: github.event.pull_request.merged == false
-    uses: techishthoughts-org/java-workflows/.github/workflows/auto-delete-branch-enhanced.yml@v1.0.0
+    uses: techishthoughts-org/java-workflows/.github/workflows/auto-delete-branch-enhanced.yml@v2.0.5
     with:
       protected-branches: 'main,develop'
       add-comment: true
