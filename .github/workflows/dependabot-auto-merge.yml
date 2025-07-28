@@ -13,7 +13,7 @@ jobs:
   dependabot:
     # Only run on Dependabot PRs or when explicitly requested
     if: github.actor == 'dependabot[bot]' || contains(github.event.pull_request.labels.*.name, 'dependencies')
-    uses: techishthoughts-org/java-workflows/.github/workflows/dependabot-auto-merge-enhanced.yml@v1.0.0
+    uses: techishthoughts-org/java-workflows/.github/workflows/dependabot-auto-merge-enhanced.yml@v2.0.5
     with:
       auto-merge-minor: true
       auto-merge-patch: true
